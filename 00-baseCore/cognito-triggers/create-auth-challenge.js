@@ -17,16 +17,13 @@ exports.handler = async (event = {}) => {
   let passCode
   const phoneNumber = event.request.userAttributes.phone_number
 
-  if (
-    (event.request.session &&
-      event.request.session.length &&
-      event.request.session.slice(-1)[0].challengeName == "SRP_A") ||
-    event.request.session.length == 0
-  ) {
+  const session = event.request.session || []
+
+  if (!session.length || session.slice(-1)[0].challengeName === "SRP_A") {
     passCode = crypto_secure_random_digit.randomDigits(6).join("")
     await sendSMSviaSNS(phoneNumber, passCode)
   } else {
-    const previousChallenge = event.request.session.slice(-1)[0]
+    const previousChallenge = session.slice(-1)[0]
     passCode = previousChallenge.challengeMetadata.match(/CODE-(\d*)/)[1]
   }
 
